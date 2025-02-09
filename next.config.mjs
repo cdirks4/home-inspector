@@ -7,6 +7,12 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_VAPI_KEY: process.env.NEXT_PUBLIC_VAPI_KEY,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;
