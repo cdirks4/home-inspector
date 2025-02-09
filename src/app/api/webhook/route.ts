@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 
+interface AnalysisData {
+  summary: string;
+  structuredData: {
+    appointmentDate: string;
+    customerName: string;
+    customerEmail: string;
+    [key: string]: any;
+  };
+  successEvaluation: string;
+}
+
 interface WebhookMessage {
   timestamp: number;
   type: string;
   status: string;
   role: string;
+  analysis?: AnalysisData;
   artifact?: {
     messages: any[];
     messagesOpenAIFormatted: any[];
@@ -37,6 +49,28 @@ export async function POST(req: Request) {
           status: message.status,
           messages: message.artifact?.messages,
         });
+        break;
+
+      case "end-of-call-report":
+        if (message.analysis?.structuredData) {
+          const bookingPayload = {
+            startTime: message.analysis.structuredData.appointmentDate,
+            name: message.analysis.structuredData.customerName,
+            email: message.analysis.structuredData.customerEmail,
+            notes: message.analysis.summary || "Booking created from call report",
+          };
+
+          const bookingResponse = await fetch("/api/bookings", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(bookingPayload),
+          });
+
+          const bookingResult = await bookingResponse.json();
+          console.log("[End of Call Booking Created]", bookingResult);
+        }
         break;
 
       case "call.completed":
